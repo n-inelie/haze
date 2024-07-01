@@ -96,6 +96,10 @@ int main(void) {
         std::cout << "Failed to load texture" << std::endl;
         return -1;
     }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, data1);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data1);
 
     // Texture 2
     uint texture2;
@@ -107,11 +111,6 @@ int main(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                     GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data1);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(data1);
 
     char texture2_path[256];
     sprintf(texture2_path, "%s/%s", textures_dir_path, "texture2.png");
@@ -129,18 +128,19 @@ int main(void) {
     shader.use();
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
+
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shader.use();
-
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+
+        shader.use();
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -148,6 +148,10 @@ int main(void) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
     return 0;
