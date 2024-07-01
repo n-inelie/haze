@@ -1,5 +1,5 @@
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -17,10 +17,10 @@ char* loadShaderSource(const char* filename);
 typedef unsigned int uint;
 
 float vertices[] = {
-    0.5f,  0.5f,  0.0f,  // top right
-    0.5f,  -0.5f, 0.0f,  // bottom right
-    -0.5f, -0.5f, 0.0f,  // bottom left
-    -0.5f, 0.5f,  0.0f   // top left
+    // positions         // colors
+    0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left
+    0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f   // top
 };
 uint indices[] = {0, 1, 3, 1, 2, 3};
 
@@ -99,9 +99,12 @@ int main(void) {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
@@ -136,13 +139,14 @@ inline void processInput(GLFWwindow* window) {
         glfwSetWindowShouldClose(window, true);
 }
 
-inline void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+inline void framebuffer_size_callback(GLFWwindow* window, int width,
+                                      int height) {
     (void)window;
     glViewport(0, 0, width, height);
 }
 
 char* loadShaderSource(const char* filename) {
-    const char *shadersPath = getenv("HAZE_SHADERS_PATH");
+    const char* shadersPath = getenv("HAZE_SHADERS_PATH");
     char filePath[256];
     sprintf(filePath, "%s/%s", shadersPath, filename);
 
@@ -156,15 +160,14 @@ char* loadShaderSource(const char* filename) {
     std::streamsize length = file.tellg();
     file.seekg(0, file.beg);
 
-    char *buffer = new char[length + 1];
+    char* buffer = new char[length + 1];
 
     if (file.read(buffer, length)) {
         buffer[length] = '\0';
         return buffer;
     } else {
         std::cerr << "Error reading the file.\n";
-        delete [] buffer;
+        delete[] buffer;
         return nullptr;
     }
 }
-
