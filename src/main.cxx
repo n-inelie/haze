@@ -1,15 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
-#include <fstream>
-#include <iostream>
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
-char* loadShaderSource(const char* filename);
+#include "utils.hpp"
 
 #define HEIGHT 450
 #define WIDTH 800
@@ -132,42 +128,4 @@ int main(void) {
 
     glfwTerminate();
     return 0;
-}
-
-inline void processInput(GLFWwindow* window) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-
-inline void framebuffer_size_callback(GLFWwindow* window, int width,
-                                      int height) {
-    (void)window;
-    glViewport(0, 0, width, height);
-}
-
-char* loadShaderSource(const char* filename) {
-    const char* shadersPath = getenv("HAZE_SHADERS_PATH");
-    char filePath[256];
-    sprintf(filePath, "%s/%s", shadersPath, filename);
-
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file) {
-        std::cerr << "Error opening the file.\n";
-        return nullptr;
-    }
-
-    file.seekg(0, file.end);
-    std::streamsize length = file.tellg();
-    file.seekg(0, file.beg);
-
-    char* buffer = new char[length + 1];
-
-    if (file.read(buffer, length)) {
-        buffer[length] = '\0';
-        return buffer;
-    } else {
-        std::cerr << "Error reading the file.\n";
-        delete[] buffer;
-        return nullptr;
-    }
 }
