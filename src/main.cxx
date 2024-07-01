@@ -1,6 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
@@ -124,12 +128,16 @@ int main(void) {
                  GL_UNSIGNED_BYTE, data2);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data2);
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans = glm::mat4(1.0f);
 
     shader.use();
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
 
+    float theta = 0;
     while (!glfwWindowShouldClose(window)) {
+        theta+=0.0001;
         processInput(window);
 
         glClearColor(0, 0, 0, 1);
@@ -139,6 +147,13 @@ int main(void) {
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+
+        trans = glm::rotate(trans, glm::radians(theta),
+                            glm::vec3(1.0f, 1.0f, 0.0f));
+        vec = trans * vec;
+
+        uint transformLoc = glGetUniformLocation(shader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         shader.use();
 
