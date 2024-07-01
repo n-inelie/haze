@@ -47,7 +47,6 @@ int main(void) {
 
     glViewport(0, 0, WIDTH, HEIGHT);
 
-
     const char* shaders_dir_path = getenv("HAZE_SHADERS_PATH");
     Shader shader(shaders_dir_path, "vertex.glsl", "fragment.glsl");
 
@@ -62,7 +61,8 @@ int main(void) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                 GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void*)0);
@@ -74,9 +74,13 @@ int main(void) {
                           (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    uint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    const char* textures_dir_path = getenv("HAZE_TEXTURES_PATH");
+    int width, height, nrChannels;
+
+    // Texture 1
+    uint texture1;
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -84,23 +88,47 @@ int main(void) {
                     GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    const char* textures_dir_path = getenv("HAZE_TEXTURES_PATH");
-    char texture2_path[256];
-    sprintf(texture2_path, "%s/%s", textures_dir_path, "texture2.png");
-    int width, height, nrChannels;
-    uchar* data = stbi_load(texture2_path, &width, &height, &nrChannels, 0);
-    if (!data) {
-        std::cout << texture2_path << std::endl;
+    char texture1_path[256];
+    sprintf(texture1_path, "%s/%s", textures_dir_path, "texture1.jpg");
+    uchar* data1 = stbi_load(texture1_path, &width, &height, &nrChannels, 0);
+    if (!data1) {
+        std::cout << texture1_path << std::endl;
         std::cout << "Failed to load texture" << std::endl;
         return -1;
     }
 
+    // Texture 2
+    uint texture2;
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data);
+                 GL_UNSIGNED_BYTE, data1);
     glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data1);
 
-    stbi_image_free(data);
+    char texture2_path[256];
+    sprintf(texture2_path, "%s/%s", textures_dir_path, "texture2.png");
+    uchar* data2 = stbi_load(texture2_path, &width, &height, &nrChannels, 0);
+    if (!data2) {
+        std::cout << texture2_path << std::endl;
+        std::cout << "Failed to load texture" << std::endl;
+        return -1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data2);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data2);
 
+    shader.use();
+    shader.setInt("texture1", 0);
+    shader.setInt("texture2", 1);
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
@@ -108,7 +136,12 @@ int main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
