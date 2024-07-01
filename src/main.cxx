@@ -85,12 +85,12 @@ int main(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     const char* textures_dir_path = getenv("HAZE_TEXTURES_PATH");
-    char texture1_path[256];
-    sprintf(texture1_path, "%s/%s", textures_dir_path, "texture1.jpg");
+    char texture2_path[256];
+    sprintf(texture2_path, "%s/%s", textures_dir_path, "texture2.png");
     int width, height, nrChannels;
-    uchar* data = stbi_load(texture1_path, &width, &height, &nrChannels, 0);
+    uchar* data = stbi_load(texture2_path, &width, &height, &nrChannels, 0);
     if (!data) {
-        std::cout << texture1_path << std::endl;
+        std::cout << texture2_path << std::endl;
         std::cout << "Failed to load texture" << std::endl;
         return -1;
     }
